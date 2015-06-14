@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace ScrapeMonet {
-    public class Program {
+    public static class Program {
         private const string CacheMonetBasePath = "http://cachemonet.com/";
 
-        public void Main(string[] args) {
+        public static void Main(string[] args) {
             try {
                 // run an async task on the threadpool
                 Task.Run(MainAsync).Wait();
@@ -27,7 +27,7 @@ namespace ScrapeMonet {
             }
         }
 
-        public async Task MainAsync() {
+        public static async Task MainAsync() {
             DateTime startTime = DateTime.Now;
 
             WriteLog("Now scraping CacheMonet");
@@ -46,7 +46,7 @@ namespace ScrapeMonet {
             WriteLog("Scrape complete! Scrape took {0}", scrapeDuration.ToString());
         }
 
-        public async Task DownloadMiscFromUrl(string url) {
+        public static async Task DownloadMiscFromUrl(string url) {
             // scrape the main html page and download anything that looks interesting
             // (this includes the main song, various gifs and other images)
             string htmlText;
@@ -93,7 +93,7 @@ namespace ScrapeMonet {
             await DownloadFileList(downloadUrls, "misc");
         }
 
-        public async Task DownloadFilesFromJsonUrl(string url, string downloadBasePath, string destinationDirectory) {
+        public static async Task DownloadFilesFromJsonUrl(string url, string downloadBasePath, string destinationDirectory) {
             // download everything listed in the json
             WriteLog("Downloading all files from within {0}", url);
 
@@ -118,7 +118,7 @@ namespace ScrapeMonet {
             WriteLog("Downloaded all files from within {0}", url);
         }
 
-        public async Task DownloadFileList(List<string> fileUrls, string destinationDirectory) {
+        public static async Task DownloadFileList(List<string> fileUrls, string destinationDirectory) {
             // create the destination directory paths if it doesn't exist
             Directory.CreateDirectory(destinationDirectory);
 
@@ -136,7 +136,7 @@ namespace ScrapeMonet {
             //await Task.Run(() => Parallel.ForEach(fileUrls, async url => await DownloadFile(url, destinationDirectory)));
         }
 
-        public async Task DownloadFile(string fileUrl, string destinationDirectory) {
+        public static async Task DownloadFile(string fileUrl, string destinationDirectory) {
             using (WebClient webClient = new WebClient()) {
                 WriteLog("Downloading file {0}", fileUrl);
                 await webClient.DownloadFileTaskAsync(fileUrl, destinationDirectory + "/" + fileUrl.Split('/').Last());
@@ -144,7 +144,7 @@ namespace ScrapeMonet {
             }
         }
 
-        public void WriteLog(string message, params string[] args) {
+        public static void WriteLog(string message, params string[] args) {
             // log line with timestamp
             Console.WriteLine("[{0}] {1}", DateTime.Now.ToString("o"), string.Format(message, args));
         }
