@@ -2,58 +2,50 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
+using System.Net.Http.Json;
+using System.Net.Http;
 
-using Newtonsoft.Json;
+namespace ScrapeMonet
+{
+    public static class Program
+    {
+        private const string CacheMonetBasePath = "http://cachemonet.com";
 
-namespace ScrapeMonet {
-    public static class Program {
-        private const string CacheMonetBasePath = "http://cachemonet.com/";
+        private static HttpClient client;
 
-        public static void Main(string[] args) {
-            try {
-                // run an async task on the threadpool
-                Task.Run(MainAsync).Wait();
-            }
-            catch (Exception e) {
-                // catch all for any errors
-                WriteLog("Error: {0}", e.ToString());
-            }
-            finally {
-                // wait for enter before exiting
-                Console.WriteLine("Press enter to exit...");
-                Console.ReadLine();
-            }
-        }
-
-        public static async Task MainAsync() {
+        public static async Task Main(string[] args)
+        {
             DateTime startTime = DateTime.Now;
 
             WriteLog("Now scraping CacheMonet");
-            List<Task> tasks = new List<Task>();
 
-            tasks.Add(DownloadFilesFromJsonUrl(CacheMonetBasePath + "json/bg.json", CacheMonetBasePath, "bg"));
-            tasks.Add(DownloadFilesFromJsonUrl(CacheMonetBasePath + "json/center.json", CacheMonetBasePath, "center"));
-            tasks.Add(DownloadMiscFromUrl(CacheMonetBasePath));
+            using (client = new HttpClient()
+            {
+                BaseAddress = new Uri(CacheMonetBasePath)
+            })
+            {
+                List<Task> tasks = new List<Task>();
 
-            // start all scraping tasks and wait for them to complete
-            await Task.WhenAll(tasks);
+                tasks.Add(DownloadFilesFromJsonUrl("/json/bg.json", "bg"));
+                tasks.Add(DownloadFilesFromJsonUrl("/json/center.json", "center"));
+                tasks.Add(DownloadMiscFromUrl("/"));
 
-            DateTime endTime = DateTime.Now;
-            TimeSpan scrapeDuration = endTime - startTime;
+                // start all scraping tasks and wait for them to complete
+                await Task.WhenAll(tasks);
 
-            WriteLog("Scrape complete! Scrape took {0}", scrapeDuration.ToString());
+                DateTime endTime = DateTime.Now;
+                TimeSpan scrapeDuration = endTime - startTime;
+
+                WriteLog($"Scrape complete! Scrape took {scrapeDuration}");
+            }
         }
 
-        public static async Task DownloadMiscFromUrl(string url) {
+        public static async Task DownloadMiscFromUrl(string path)
+        {
             // scrape the main html page and download anything that looks interesting
             // (this includes the main song, various gifs and other images)
-            string htmlText;
-
-            using (WebClient webClient = new WebClient()) {
-                htmlText = await webClient.DownloadStringTaskAsync(new Uri(url));
-            }
+            string htmlText = await client.GetStringAsync(path);
 
             // assuming all strings surrounded by "" close, every second (odd indicies) string in the split of " will yield all quoted strings.
             var quoteTexts = htmlText.Split('\"').Where((item, index) => index % 2 != 0); ;
@@ -65,70 +57,48 @@ namespace ScrapeMonet {
             List<string> endsWithExtensions = new List<string>() { ".gif", ".png", ".jpg", ".ico", ".mp3", ".ogg", ".mp4", ".aac" };
 
             // this list will be populated by full urls to the resources
-            List<string> downloadUrls = new List<string>();
-
-            foreach (string quotesString in quoteTexts) {
-                // check if this string is interesting
-                bool match = false;
-                // check if the string ends with an interesting extension
-                foreach (string matchString in endsWithExtensions) {
-                    if (quotesString.EndsWith(matchString, StringComparison.InvariantCultureIgnoreCase)) {
-                        match = true;
-                        break;
-                    }
-                }
-
-                // if this string is interesting, add it do the downloads list
-                if (match) {
-                    if (quotesString.StartsWith(CacheMonetBasePath, StringComparison.InvariantCultureIgnoreCase)) {
-                        downloadUrls.Add(quotesString);
-                    }
-                    else {
-                        downloadUrls.Add(CacheMonetBasePath + quotesString);
-                    }
-                }
-            }
+            List<string> downloadUrls = quoteTexts
+                .Where(s => endsWithExtensions.Any(e => s.EndsWith(e, StringComparison.InvariantCultureIgnoreCase)))
+                .Select(s => s.StartsWith(CacheMonetBasePath, StringComparison.InvariantCultureIgnoreCase) ? s : "/" + s)
+                .ToList();
 
             // download all the urls we found
             await DownloadFileList(downloadUrls, "misc");
         }
 
-        public static async Task DownloadFilesFromJsonUrl(string url, string downloadBasePath, string destinationDirectory) {
+        public static async Task DownloadFilesFromJsonUrl(string path, string destinationDirectory)
+        {
             // download everything listed in the json
-            WriteLog("Downloading all files from within {0}", url);
+            WriteLog($"Downloading all files from within {path}");
 
-            string jsonText = null;
-            using (WebClient webClient = new WebClient()) {
-                // download the json as a string
-                jsonText = await webClient.DownloadStringTaskAsync(new Uri(url));
+            List<string>? downloadUrls = await client.GetFromJsonAsync<List<string>>(path);
+
+            if (downloadUrls is not null)
+            {
+                var absolutePaths = downloadUrls.Select(s => "/" + s);
+
+                // download all the files
+                await DownloadFileList(absolutePaths, destinationDirectory);
+
+                WriteLog($"Downloaded all files from within {path}");
             }
-
-            List<string> downloadUrls = new List<string>();
-            // assume the json is in a string array format and deserialise it
-            JsonConvert.PopulateObject(jsonText, downloadUrls);
-
-            // make each path a full path
-            for(int i = 0; i < downloadUrls.Count; i++) {
-                downloadUrls[i] = downloadBasePath + downloadUrls[i];
-            }
-
-            // download all the files
-            await DownloadFileList(downloadUrls, destinationDirectory);
-
-            WriteLog("Downloaded all files from within {0}", url);
         }
 
-        public static async Task DownloadFileList(List<string> fileUrls, string destinationDirectory) {
+        public static async Task DownloadFileList(IEnumerable<string> fileUrls, string destinationDirectory)
+        {
             // create the destination directory paths if it doesn't exist
             Directory.CreateDirectory(destinationDirectory);
 
             // download all of the files simultaniously
-            await Task.WhenAll(fileUrls.Select(s => Task.Run(async () => {
-                try {
+            await Task.WhenAll(fileUrls.Select(s => Task.Run(async () =>
+            {
+                try
+                {
                     await DownloadFile(s, destinationDirectory);
                 }
-                catch (Exception e) {
-                    WriteLog("Error downloading {0} - Details: {1}", s, e.Message);
+                catch (Exception e)
+                {
+                    WriteLog($"Error downloading {s} - Details: {e.Message}");
                 }
             }
             )));
@@ -136,17 +106,29 @@ namespace ScrapeMonet {
             //await Task.Run(() => Parallel.ForEach(fileUrls, async url => await DownloadFile(url, destinationDirectory)));
         }
 
-        public static async Task DownloadFile(string fileUrl, string destinationDirectory) {
-            using (WebClient webClient = new WebClient()) {
-                WriteLog("Downloading file {0}", fileUrl);
-                await webClient.DownloadFileTaskAsync(fileUrl, destinationDirectory + "/" + fileUrl.Split('/').Last());
-                WriteLog("Downloaded file {0}", fileUrl);
+        public static async Task DownloadFile(string fileUrl, string destinationDirectory)
+        {
+            string destination = destinationDirectory + "/" + fileUrl.Split('/').Last();
+            WriteLog($"Downloading file {fileUrl} -> {destination}");
+
+            await using (FileStream destinationFile = File.OpenWrite(destination))
+            {
+                using (HttpResponseMessage response = await client.GetAsync(fileUrl))
+                {
+                    response.EnsureSuccessStatusCode();
+                    var stream = await response.Content.ReadAsStreamAsync();
+                    await stream.CopyToAsync(destinationFile);
+                    await destinationFile.FlushAsync();
+                }
             }
+
+            WriteLog($"Downloaded file {fileUrl} -> {destination}");
         }
 
-        public static void WriteLog(string message, params string[] args) {
+        public static void WriteLog(string message)
+        {
             // log line with timestamp
-            Console.WriteLine("[{0}] {1}", DateTime.Now.ToString("o"), string.Format(message, args));
+            Console.WriteLine($"[{DateTime.Now:O}] {message}");
         }
     }
 }

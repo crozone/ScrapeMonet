@@ -1,18 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32811.315
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B8A6E274-7739-4CF8-AF1C-66A8DD748006}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C8666A72-2B6B-4E90-AC10-C67F6A35D857}"
-	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
-	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ScrapeMonet.DNX", "src\ScrapeMonet\ScrapeMonet.DNX.xproj", "{80470D1B-9B4B-4A69-A1C6-13F1041A5E22}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScrapeMonet.2013", "src\ScrapeMonet\ScrapeMonet.2013.csproj", "{7BC15D77-1086-4B3F-88B1-5EA16B575E6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScrapeMonet", "src\ScrapeMonet\ScrapeMonet.csproj", "{7849BE50-AD6E-4B29-B414-1D05785E721D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,20 +15,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{80470D1B-9B4B-4A69-A1C6-13F1041A5E22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{80470D1B-9B4B-4A69-A1C6-13F1041A5E22}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{80470D1B-9B4B-4A69-A1C6-13F1041A5E22}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{80470D1B-9B4B-4A69-A1C6-13F1041A5E22}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7BC15D77-1086-4B3F-88B1-5EA16B575E6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7BC15D77-1086-4B3F-88B1-5EA16B575E6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7BC15D77-1086-4B3F-88B1-5EA16B575E6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7BC15D77-1086-4B3F-88B1-5EA16B575E6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7849BE50-AD6E-4B29-B414-1D05785E721D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7849BE50-AD6E-4B29-B414-1D05785E721D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7849BE50-AD6E-4B29-B414-1D05785E721D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7849BE50-AD6E-4B29-B414-1D05785E721D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{80470D1B-9B4B-4A69-A1C6-13F1041A5E22} = {B8A6E274-7739-4CF8-AF1C-66A8DD748006}
-		{7BC15D77-1086-4B3F-88B1-5EA16B575E6C} = {B8A6E274-7739-4CF8-AF1C-66A8DD748006}
+		{7849BE50-AD6E-4B29-B414-1D05785E721D} = {B8A6E274-7739-4CF8-AF1C-66A8DD748006}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4FA0FA6D-741E-43AF-85CF-49A62258444C}
 	EndGlobalSection
 EndGlobal
