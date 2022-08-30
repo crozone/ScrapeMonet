@@ -15,4 +15,4 @@ misc is for any images or music linked anywhere in the main html of the CacheMon
 
 ## Under the hood
 
-ScrapeMonet uses WebClient to download all web resources used during the scrape. JSON.NET is used to process the json gif lists that cachemonet uses. The scraper relies heavily on the asynchronous programming features (Task and async) only available in C# 5+ and .NET 4.5+ , however this allows it to easily perform all web downloads with a large amount of parallelism. 
+ScrapeMonet uses HttpClient to download all web resources found during the scrape. Resource paths are parsed out of the json resource blobs that cachemonet uses. Downloads occur in parallel to speed up scraping.
